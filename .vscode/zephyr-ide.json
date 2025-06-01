@@ -1,0 +1,68 @@
+{
+  "projects": {
+    "stand": {
+      "rel_path": "stand",
+      "name": "stand",
+      "buildConfigs": {
+        "build\\gd32f450i_eval": {
+          "board": "gd32f450i_eval",
+          "relBoardSubDir": "gd\\gd32f450i_eval",
+          "name": "build\\gd32f450i_eval",
+          "westBuildArgs": "",
+          "westBuildCMakeArgs": " -DCONFIG_DEBUG_OPTIMIZATIONS=y -DCONFIG_DEBUG_THREAD_INFO=y ",
+          "confFiles": {
+            "config": [],
+            "extraConfig": [],
+            "overlay": [],
+            "extraOverlay": []
+          },
+          "runnerConfigs": {
+            "jlink": {
+              "runner": "jlink",
+              "name": "jlink",
+              "args": ""
+            }
+          }
+        }
+      },
+      "confFiles": {
+        "config": [],
+        "extraConfig": [],
+        "overlay": [],
+        "extraOverlay": []
+      }
+    },
+    "bus485_manager": {
+      "rel_path": "bus485_manager",
+      "name": "bus485_manager",
+      "buildConfigs": {
+        "build\\gd32f450i_eval": {
+          "board": "gd32f450i_eval",
+          "relBoardSubDir": "gd\\gd32f450i_eval",
+          "name": "build\\gd32f450i_eval",
+          "westBuildArgs": "",
+          "westBuildCMakeArgs": " -DCONFIG_DEBUG_OPTIMIZATIONS=y -DCONFIG_DEBUG_THREAD_INFO=y ",
+          "confFiles": {
+            "config": [],
+            "extraConfig": [],
+            "overlay": [],
+            "extraOverlay": []
+          },
+          "runnerConfigs": {
+            "jlink": {
+              "runner": "jlink",
+              "name": "jlink",
+              "args": ""
+            }
+          }
+        }
+      },
+      "confFiles": {
+        "config": [],
+        "extraConfig": [],
+        "overlay": [],
+        "extraOverlay": []
+      }
+    }
+  }
+}

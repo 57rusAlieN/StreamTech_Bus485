@@ -1,0 +1,21 @@
+menuconfig BUS_485
+    bool "Extention for SPI driver with bus locking"
+    depends on SPI
+    help
+      Enable extended SPI driver with semaphore-based bus locking
+
+if BUS_485
+
+config BUS_485_MAX_CLIENTS
+    int "Maximum number of SPI bus clients"
+    default 8
+    help
+      Maximum number of devices that can wait for SPI bus access
+
+config BUS_485_LOCK_TIMEOUT_MS
+    int "Default SPI bus lock timeout (ms)"
+    default 100
+    help
+      Default timeout for acquiring SPI bus lock
+
+endif # BUS_485

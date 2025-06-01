@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "manager.h": "c",
+        "kernel.h": "c"
+    }
+}
