@@ -1,13 +1,13 @@
 {
   "projects": {
-    "stand": {
-      "rel_path": "stand",
-      "name": "stand",
+    "Bus485": {
+      "rel_path": "",
+      "name": "Bus485",
       "buildConfigs": {
-        "build\\gd32f450i_eval": {
-          "board": "gd32f450i_eval",
-          "relBoardSubDir": "gd\\gd32f450i_eval",
-          "name": "build\\gd32f450i_eval",
+        "build\\qemu_cortex_m3": {
+          "board": "qemu_cortex_m3",
+          "relBoardSubDir": "qemu\\cortex_m3",
+          "name": "build\\qemu_cortex_m3",
           "westBuildArgs": "",
           "westBuildCMakeArgs": " -DCONFIG_DEBUG_OPTIMIZATIONS=y -DCONFIG_DEBUG_THREAD_INFO=y ",
           "confFiles": {
@@ -16,47 +16,24 @@
             "overlay": [],
             "extraOverlay": []
           },
-          "runnerConfigs": {
-            "jlink": {
-              "runner": "jlink",
-              "name": "jlink",
-              "args": ""
-            }
-          }
+          "runnerConfigs": {}
         }
       },
       "confFiles": {
         "config": [],
-        "extraConfig": [],
+        "extraConfig": [
+          "Kconfig.bus485"
+        ],
         "overlay": [],
-        "extraOverlay": []
+        "extraOverlay": [
+          "bus485.overlay"
+        ]
       }
     },
-    "bus485_manager": {
-      "rel_path": "bus485_manager",
-      "name": "bus485_manager",
-      "buildConfigs": {
-        "build\\gd32f450i_eval": {
-          "board": "gd32f450i_eval",
-          "relBoardSubDir": "gd\\gd32f450i_eval",
-          "name": "build\\gd32f450i_eval",
-          "westBuildArgs": "",
-          "westBuildCMakeArgs": " -DCONFIG_DEBUG_OPTIMIZATIONS=y -DCONFIG_DEBUG_THREAD_INFO=y ",
-          "confFiles": {
-            "config": [],
-            "extraConfig": [],
-            "overlay": [],
-            "extraOverlay": []
-          },
-          "runnerConfigs": {
-            "jlink": {
-              "runner": "jlink",
-              "name": "jlink",
-              "args": ""
-            }
-          }
-        }
-      },
+    "samples": {
+      "rel_path": "samples",
+      "name": "samples",
+      "buildConfigs": {},
       "confFiles": {
         "config": [],
         "extraConfig": [],

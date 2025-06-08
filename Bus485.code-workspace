@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"manager.h": "c",
+			"kernel.h": "c"
+		},
+		"terminal.integrated.defaultProfile.windows": "Zephyr IDE Terminal",
+		"C_Cpp.default.compileCommands": "${workspaceFolder}\\.vscode\\compile_commands.json",
+		"cmake.configureOnOpen": false,
+		"cSpell.enabled": false
+	}
+}

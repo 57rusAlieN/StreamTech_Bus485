@@ -111,7 +111,7 @@ int32_t bus485_release(const struct device *dev)
     return 0;
 }
 
-int32_t bus485_send(const struct device *dev,
+int32_t bus485_send(const struct device *dev,ё
                     const uint8_t *buffer,
                     uint32_t count)
 {

@@ -1,9 +1,0 @@
-description: Extended SPI controller with bus locking
-compatible: "vendor,spi-extended"
-include: spi-controller.yaml
-
-properties:
-  cs-gpios:
-    type: phandle-array
-    required: false
-    description: GPIO pins for chip select
