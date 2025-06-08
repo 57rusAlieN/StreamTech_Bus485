@@ -21,13 +21,9 @@
       },
       "confFiles": {
         "config": [],
-        "extraConfig": [
-          "Kconfig.bus485"
-        ],
+        "extraConfig": [],
         "overlay": [],
-        "extraOverlay": [
-          "bus485.overlay"
-        ]
+        "extraOverlay": []
       }
     },
     "samples": {

@@ -1,8 +1,9 @@
 / {
-    rs485_inst: rs485 {
-        compatible = "custom,rs485";
+    bus485_inst: bus485 {
+        compatible = "custom,bus485";
         uart = <&uart0>;
-        de-re-gpios = <&gpio0 12 1>;
+        de-re-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+        current-speed = <9600>;
         pre-delay-us = <50>;
         post-delay-us = <50>;
         status = "okay";

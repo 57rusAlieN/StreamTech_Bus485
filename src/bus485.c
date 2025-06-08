@@ -1,263 +1,142 @@
-// #include "bus485.h"
-
-// int32_t bus485_lock(const struct device *dev)
-// {
-//     struct spi_context *ctx = dev->data;
-
-//     if (!ctx->lock_initialized)
-//     {
-//         return -ENODEV;
-//     }
-
-//     /* Рекурсивный захват тем же владельцем */
-//     if (ctx->lock.current_owner == requester)
-//     {
-//         atomic_inc(&ctx->lock.owner_count);
-//         return 0;
-//     }
-
-//     /* Попытка захватить семафор */
-//     if (k_sem_take(&ctx->lock.sem, K_NO_WAIT) == 0)
-//     {
-//         ctx->lock.current_owner = requester;
-//         atomic_set(&ctx->lock.owner_count, 1);
-//         return 0;
-//     }
-
-//     /* Если шина занята, добавляем в очередь ожидания */
-//     struct k_fifo *waitq = &ctx->lock.waiters;
-//     struct spi_waiter_node *node = k_malloc(sizeof(*node));
-//     if (!node)
-//     {
-//         return -ENOMEM;
-//     }
-
-//     node->requester = requester;
-//     k_fifo_put(waitq, node);
-
-//     /* Ожидание семафора с таймаутом */
-//     int ret = k_sem_take(&ctx->lock.sem, timeout);
-//     if (ret != 0)
-//     {
-//         /* Удаляем из очереди при таймауте */
-//         struct spi_waiter_node *tmp;
-//         while ((tmp = k_fifo_get(waitq, K_NO_WAIT)) != NULL)
-//         {
-//             if (tmp->requester == requester)
-//             {
-//                 k_free(tmp);
-//                 break;
-//             }
-//             k_fifo_put(waitq, tmp);
-//         }
-//         return ret;
-//     }
-
-//     ctx->lock.current_owner = requester;
-//     atomic_set(&ctx->lock.owner_count, 1);
-//     return 0;
-// }
-
-// int32_t bus485_release(const struct device *dev)
-// {
-//     struct spi_context *ctx = dev->data;
-
-//     if (!ctx->lock_initialized)
-//     {
-//         return -ENODEV;
-//     }
-
-//     if (ctx->lock.current_owner != requester)
-//     {
-//         return -EPERM;
-//     }
-
-//     /* Уменьшаем счетчик рекурсивных захватов */
-//     if (atomic_dec(&ctx->lock.owner_count) > 1)
-//     {
-//         return 0;
-//     }
-
-//     /* Передаем управление следующему в очереди */
-//     struct spi_waiter_node *next = k_fifo_get(&ctx->lock.waiters, K_NO_WAIT);
-//     if (next != NULL)
-//     {
-//         ctx->lock.current_owner = next->requester;
-//         atomic_set(&ctx->lock.owner_count, 1);
-//         k_free(next);
-//     }
-//     else
-//     {
-//         ctx->lock.current_owner = NULL;
-//         atomic_set(&ctx->lock.owner_count, 0);
-//     }
-
-//     k_sem_give(&ctx->lock.sem);
-//     return 0;
-// }
-
-// int32_t bus485_send(const struct device *dev,
-//                     const uint8_t *buffer,
-//                     uint32_t count)
-// {
-//     return 0;
-// }
-
-// int32_t bus485_recv(const struct device *dev,
-//                     uint8_t *buffer,
-//                     uint32_t buffer_size,
-//                     uint32_t timeout_ms)
-// {
-//     return 0;
-// }
-// int32_t bus485_flush(const struct device *dev)
-// {
-//     return 0;
-// }
-// int32_t bus485_set_baudrate(const struct device *dev,
-//                             uint32_t baudrate)
-// {
-//     return 0;
-// }
 #include "bus485.h"
+#include <zephyr/drivers/uart.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/logging/log.h>
 
-LOG_MODULE_REGISTER(rs485, CONFIG_RS485_LOG_LEVEL);
+LOG_MODULE_REGISTER(bus485, CONFIG_BUS485_LOG_LEVEL);
 
-/* Конфигурация из devicetree */
-#define UART_NODE        DT_NODELABEL(uart0)
-#define DE_RE_GPIO_NODE  DT_NODELABEL(rs485_gpio)
+/* Структура данных драйвера */
+struct bus485_data {
+    struct k_sem bus_sem;
+    const struct device *uart;
+    struct gpio_dt_spec de_re;
+    uint32_t current_baudrate;
+    uint32_t pre_delay_us;
+    uint32_t post_delay_us;
+};
 
-static const struct device *const uart_dev = DEVICE_DT_GET(UART_NODE);
-static const struct gpio_dt_spec de_re_gpio = GPIO_DT_SPEC_GET(DE_RE_GPIO_NODE, gpios);
-
-static struct {
-    struct k_mutex bus_lock;
-    bool initialized;
-} rs485_ctx;
-
-int32_t bus485_init(void)
+/* API реализации */
+static int32_t bus485_lock(const struct device *dev)
 {
-    if (rs485_ctx.initialized) {
-        return 0;
-    }
-
-    if (!device_is_ready(uart_dev)) {
-        LOG_ERR("UART device not ready");
-        return -ENODEV;
-    }
-
-    if (!device_is_ready(de_re_gpio.port)) {
-        LOG_ERR("GPIO device not ready");
-        return -ENODEV;
-    }
-
-    gpio_pin_configure_dt(&de_re_gpio, GPIO_OUTPUT_INACTIVE);
-    k_mutex_init(&rs485_ctx.bus_lock);
-
-    rs485_ctx.initialized = true;
-    LOG_INF("RS485 initialized");
-    return 0;
-}
-
-int32_t bus485_lock(k_timeout_t timeout)
-{
-    if (!rs485_ctx.initialized) {
-        return -ENODEV;
-    }
-
-    if (k_mutex_lock(&rs485_ctx.bus_lock, timeout) != 0) {
+    struct bus485_data *data = dev->data;
+    
+    if (k_sem_take(&data->bus_sem, K_MSEC(100))) {
+        LOG_ERR("Bus acquisition timeout");
         return -EBUSY;
     }
-
+    
     return 0;
 }
 
-int32_t bus485_release(void)
+static int32_t bus485_release(const struct device *dev)
 {
-    if (rs485_ctx.initialized) {
-        k_mutex_unlock(&rs485_ctx.bus_lock);
-    }
+    struct bus485_data *data = dev->data;
+    k_sem_give(&data->bus_sem);
     return 0;
 }
 
-int32_t bus485_send(const uint8_t *data, size_t len)
+static int32_t bus485_send(const struct device *dev, 
+                          const uint8_t *buffer, uint32_t count)
 {
-    if (!rs485_ctx.initialized) {
-        return -ENODEV;
+    struct bus485_data *data = dev->data;
+    int32_t sent = 0;
+
+    /* Активация передатчика */
+    gpio_pin_set_dt(&data->de_re, 1);
+    k_usleep(data->pre_delay_us);
+
+    /* Отправка данных */
+    for (; sent < count; sent++) {
+        uart_poll_out(data->uart, buffer[sent]);
     }
 
-    if (k_mutex_lock(&rs485_ctx.bus_lock, K_NO_WAIT) != 0) {
-        return -EBUSY;
-    }
+    /* Деактивация передатчика */
+    k_usleep(data->post_delay_us);
+    gpio_pin_set_dt(&data->de_re, 0);
 
-    // Активация линии передачи
-    gpio_pin_set_dt(&de_re_gpio, 1);
-    k_usleep(CONFIG_RS485_PRE_DELAY_US); // Пред-задержка
-
-    int sent = 0;
-    for (; sent < len; sent++) {
-        uart_poll_out(uart_dev, data[sent]);
-    }
-
-    k_usleep(CONFIG_RS485_POST_DELAY_US); // Пост-задержка
-    gpio_pin_set_dt(&de_re_gpio, 0);
-
-    k_mutex_unlock(&rs485_ctx.bus_lock);
     return sent;
 }
 
-int32_t bus485_recv(uint8_t *buf, size_t len, k_timeout_t timeout)
+static int32_t bus485_recv(const struct device *dev,
+                          uint8_t *buffer, uint32_t buffer_size,
+                          uint32_t timeout_ms)
 {
-    if (!rs485_ctx.initialized) {
-        return -ENODEV;
-    }
+    struct bus485_data *data = dev->data;
+    int32_t received = 0;
+    int64_t end_time = k_uptime_get() + timeout_ms;
 
-    int64_t end_time = k_uptime_get() + timeout.ticks;
-    int received = 0;
+    /* Убедимся, что передатчик выключен */
+    gpio_pin_set_dt(&data->de_re, 0);
 
-    // Убедимся, что передатчик выключен
-    gpio_pin_set_dt(&de_re_gpio, 0);
-
-    while (received < len && k_uptime_get() < end_time) {
-        if (uart_poll_in(uart_dev, &buf[received]) == 0) {
+    while (received < buffer_size && k_uptime_get() < end_time) {
+        if (uart_poll_in(data->uart, &buffer[received]) == 0) {
             received++;
         } else {
             k_msleep(1);
         }
     }
 
-    return received > 0 ? received : -ETIMEDOUT;
+    return (received > 0) ? received : -ETIMEDOUT;
 }
 
-int32_t bus485_flush(void)
+static int32_t bus485_flush(const struct device *dev)
 {
-    if (!rs485_ctx.initialized) return;
-
+    struct bus485_data *data = dev->data;
     uint8_t dummy;
-    while (uart_poll_in(uart_dev, &dummy) == 0) {
-        // Читаем и отбрасываем все данные
+    
+    while (uart_poll_in(data->uart, &dummy) == 0) {
+        /* Читаем и отбрасываем все данные */
     }
+    
     return 0;
 }
 
-int32_t bus485_set_baudrate(uint32_t baudrate)
+static int32_t bus485_set_baudrate(const struct device *dev, uint32_t baudrate)
 {
-    if (!rs485_ctx.initialized) {
-        return -ENODEV;
-    }
-
+    struct bus485_data *data = dev->data;
     struct uart_config cfg;
-    int ret = uart_config_get(uart_dev, &cfg);
-    if (ret != 0) {
-        return ret;
+    int err;
+
+    err = uart_config_get(data->uart, &cfg);
+    if (err) {
+        return err;
     }
 
     cfg.baudrate = baudrate;
-    return uart_configure(uart_dev, &cfg);
+    err = uart_configure(data->uart, &cfg);
+    if (!err) {
+        data->current_baudrate = baudrate;
+    }
+
+    return err;
 }
 
-static const struct rs485_driver_api rs485_api = {
+/* Инициализация драйвера */
+static int bus485_init(const struct device *dev)
+{
+    struct bus485_data *data = dev->data;
+
+    if (!device_is_ready(data->uart)) {
+        LOG_ERR("UART device not ready");
+        return -ENODEV;
+    }
+
+    if (!device_is_ready(data->de_re.port)) {
+        LOG_ERR("GPIO device not ready");
+        return -ENODEV;
+    }
+
+    gpio_pin_configure_dt(&data->de_re, GPIO_OUTPUT_INACTIVE);
+    k_sem_init(&data->bus_sem, 1, 1);
+
+    LOG_INF("BUS485 initialized at %u baud", data->current_baudrate);
+    return 0;
+}
+
+/* Devicetree макросы */
+#define DT_DRV_COMPAT custom_bus485
+
+static const struct bus485_driver_api bus485_api = {
     .lock = bus485_lock,
     .release = bus485_release,
     .send = bus485_send,
@@ -266,46 +145,22 @@ static const struct rs485_driver_api rs485_api = {
     .set_baudrate = bus485_set_baudrate,
 };
 
-#define DT_DRV_COMPAT bus485_mutex
-
-// #define RS485_INIT(n) \
-//     static const struct rs485_config rs485_cfg_##n = { \
-//         .uart_dev = DEVICE_DT_GET(DT_INST_PHANDLE(n, uart)), \
-//         .de_re_gpio = GPIO_DT_SPEC_INST_GET(n, de_re_gpios), \
-//         .pre_delay_us = DT_INST_PROP(n, pre_delay_us), \
-//         .post_delay_us = DT_INST_PROP(n, post_delay_us), \
-//         .callback = NULL, \
-//         .user_data = NULL, \
-//     }; \
-//     \
-//     static struct rs485_data rs485_data_##n; \
-//     \
-//     DEVICE_DT_INST_DEFINE(n, \
-//         bus485_init, \
-//         NULL, \
-//         &rs485_data_##n, \
-//         &rs485_cfg_##n, \
-//         POST_KERNEL, \
-//         CONFIG_RS485_INIT_PRIORITY, \
-//         &rs485_driver_api); /* <-- Регистрация API */
-
-// DT_INST_FOREACH_STATUS_OKAY(RS485_INIT)
-
-
-#define RS485_DEFINE(n) \
-    static struct rs485_data rs485_data_##n = { \
+#define BUS485_DEFINE(n) \
+    static struct bus485_data bus485_data_##n = { \
         .uart = DEVICE_DT_GET(DT_INST_PHANDLE(n, uart)), \
         .de_re = GPIO_DT_SPEC_INST_GET(n, de_re_gpios), \
-        .pre_delay = DT_INST_PROP(n, pre_delay_us), \
-        .post_delay = DT_INST_PROP(n, post_delay_us), \
+        .current_baudrate = DT_INST_PROP(n, current_speed), \
+        .pre_delay_us = DT_INST_PROP(n, pre_delay_us), \
+        .post_delay_us = DT_INST_PROP(n, post_delay_us), \
     }; \
+    \
     DEVICE_DT_INST_DEFINE(n, \
         bus485_init, \
         NULL, \
-        &rs485_data_##n, \
+        &bus485_data_##n, \
         NULL, \
         POST_KERNEL, \
-        CONFIG_RS485_INIT_PRIORITY, \
-        &rs485_driver_api);  /* <-- Регистрация API */
+        CONFIG_BUS485_INIT_PRIORITY, \
+        &bus485_api); // <--- Регистрация API
 
-DT_INST_FOREACH_STATUS_OKAY(RS485_DEFINE)
+DT_INST_FOREACH_STATUS_OKAY(BUS485_DEFINE)

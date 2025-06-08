@@ -1,0 +1,26 @@
+# BUS485 Driver Configuration
+
+menuconfig BUS485
+    bool "BUS485 Driver Support"
+    depends on UART_INTERRUPT_DRIVEN
+    help
+      Enable BUS485 driver with semaphore-controlled access
+
+if BUS485
+
+config BUS485_INIT_PRIORITY
+    int "Driver initialization priority"
+    default 80
+    range 0 99
+    help
+      BUS485 driver device initialization priority.
+
+config BUS485_LOG_LEVEL
+    int "Log level"
+    default 2
+    range 0 4
+    help
+      BUS485 driver log level (0-4)
+
+endif # BUS485
+source "Kconfig.zephyr"
