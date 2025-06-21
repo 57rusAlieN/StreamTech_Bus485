@@ -1,0 +1,57 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Custom RS485 bus driver with DE/RE control and interrupt support
+
+compatible: "custom,bus485"
+
+include: [uart.yaml, gpio.yaml]
+
+properties:
+  uart:
+    type: phandle
+    required: true
+    description: |
+      phandle to UART device used for communication
+
+  de-re-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      GPIO specifier for DE/RE control pin (active high/low)
+
+  pre-delay-us:
+    type: int
+    required: false
+    default: 50
+    description: |
+      Delay (in microseconds) between activating DE and starting transmission
+
+  post-delay-us:
+    type: int
+    required: false
+    default: 50
+    description: |
+      Delay (in microseconds) after transmission before deactivating DE
+
+  current-speed:
+    type: int
+    required: false
+    default: 9600
+    description: |
+      Initial baud rate for the UART
+
+required:
+  - uart
+  - de-re-gpios
+
+examples:
+  - |
+    bus485 {
+        compatible = "custom,bus485";
+        uart = <&uart0>;
+        de-re-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+        pre-delay-us = <100>;
+        post-delay-us = <100>;
+        current-speed = <115200>;
+    };

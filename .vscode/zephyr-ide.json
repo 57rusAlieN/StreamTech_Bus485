@@ -26,10 +26,25 @@
         "extraOverlay": []
       }
     },
-    "samples": {
-      "rel_path": "samples",
-      "name": "samples",
-      "buildConfigs": {},
+    "basic": {
+      "rel_path": "samples\\basic",
+      "name": "basic",
+      "buildConfigs": {
+        "build\\qemu_cortex_m3": {
+          "board": "qemu_cortex_m3",
+          "relBoardSubDir": "qemu\\cortex_m3",
+          "name": "build\\qemu_cortex_m3",
+          "westBuildArgs": "",
+          "westBuildCMakeArgs": " -DCONFIG_DEBUG_OPTIMIZATIONS=y -DCONFIG_DEBUG_THREAD_INFO=y ",
+          "confFiles": {
+            "config": [],
+            "extraConfig": [],
+            "overlay": [],
+            "extraOverlay": []
+          },
+          "runnerConfigs": {}
+        }
+      },
       "confFiles": {
         "config": [],
         "extraConfig": [],
