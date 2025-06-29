@@ -5,45 +5,46 @@ description: |
 
 compatible: "custom,bus485"
 
-include: [uart.yaml, gpio.yaml]
+include: 
+  - "st,stm32-uart.yaml"
+  - "st,stm32-gpio.yaml"
 
 properties:
   uart:
     type: phandle
-    required: true
     description: |
       phandle to UART device used for communication
 
   de-re-gpios:
     type: phandle-array
-    required: true
     description: |
       GPIO specifier for DE/RE control pin (active high/low)
 
   pre-delay-us:
     type: int
-    required: false
     default: 50
     description: |
       Delay (in microseconds) between activating DE and starting transmission
 
   post-delay-us:
     type: int
-    required: false
     default: 50
     description: |
       Delay (in microseconds) after transmission before deactivating DE
 
   current-speed:
     type: int
-    required: false
-    default: 9600
+    default: 115200
     description: |
       Initial baud rate for the UART
 
 required:
-  - uart
-  - de-re-gpios
+  - name: uart
+  - name: de-re-gpios
+
+# Отключаем проверку дублирования для current-speed
+ignore-properties:
+  - current-speed
 
 examples:
   - |

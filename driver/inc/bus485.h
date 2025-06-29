@@ -21,14 +21,14 @@ struct bus485_driver_api {
  * @param dev Указатель на устройство RS485
  * @return 0 при успехе, -EBUSY при занятой шине, -EIO при ошибке
  */
-static int32_t bus485_lock(const struct device *dev);
+extern int32_t bus485_lock(const struct device *dev);
 
 /**
  * @brief Освобождение шины
  * @param dev Указатель на устройство RS485
  * @return 0 при успехе, -EIO при ошибке
  */
-static int32_t bus485_release(const struct device *dev);
+extern int32_t bus485_release(const struct device *dev);
 
 /**
  * @brief Отправка данных по шине
@@ -37,7 +37,7 @@ static int32_t bus485_release(const struct device *dev);
  * @param count Размер данных в байтах
  * @return Количество отправленных байт или код ошибки
  */
-static int32_t bus485_send(const struct device *dev, const uint8_t *buffer, uint32_t count);
+extern int32_t bus485_send(const struct device *dev, const uint8_t *buffer, uint32_t count);
 
 /**
  * @brief Прием данных с шины
@@ -47,7 +47,7 @@ static int32_t bus485_send(const struct device *dev, const uint8_t *buffer, uint
  * @param timeout_ms Таймаут ожидания в миллисекундах
  * @return Количество принятых байт или код ошибки
  */
-static int32_t bus485_recv(const struct device *dev, uint8_t *buffer, 
+extern int32_t bus485_recv(const struct device *dev, uint8_t *buffer, 
                    uint32_t buffer_size, uint32_t timeout_ms);
 
 /**
@@ -55,7 +55,7 @@ static int32_t bus485_recv(const struct device *dev, uint8_t *buffer,
  * @param dev Указатель на устройство RS485
  * @return 0 при успехе, код ошибки при неудаче
  */
-static int32_t bus485_flush(const struct device *dev);
+extern int32_t bus485_flush(const struct device *dev);
 
 /**
  * @brief Установка скорости обмена
@@ -63,7 +63,7 @@ static int32_t bus485_flush(const struct device *dev);
  * @param baudrate Новая скорость (например, 9600, 115200)
  * @return 0 при успехе, код ошибки при неудаче
  */
-static int32_t bus485_set_baudrate(const struct device *dev, uint32_t baudrate);
+extern int32_t bus485_set_baudrate(const struct device *dev, uint32_t baudrate);
 
 #ifdef __cplusplus
 }

@@ -1,8 +1,8 @@
 {
   "projects": {
-    "Bus485": {
-      "rel_path": "",
-      "name": "Bus485",
+    "driver": {
+      "rel_path": "driver",
+      "name": "driver",
       "buildConfigs": {
         "build\\qemu_cortex_m3": {
           "board": "qemu_cortex_m3",
@@ -26,9 +26,9 @@
         "extraOverlay": []
       }
     },
-    "basic": {
-      "rel_path": "samples\\basic",
-      "name": "basic",
+    "test_app": {
+      "rel_path": "test_app",
+      "name": "test_app",
       "buildConfigs": {
         "build\\qemu_cortex_m3": {
           "board": "qemu_cortex_m3",

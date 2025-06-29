@@ -15,4 +15,4 @@ manifest:
           - cmsis-dsp
           - picolibc
           - segger
-          - hal_gigadevice
+          - hal_stm32

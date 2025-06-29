@@ -35,7 +35,7 @@ struct bus485_data
 };
 
 /* API реализации */
-static int32_t bus485_lock(const struct device *dev)
+int32_t bus485_lock(const struct device *dev)
 {
     struct bus485_data *data = dev->data;
 
@@ -48,14 +48,14 @@ static int32_t bus485_lock(const struct device *dev)
     return 0;
 }
 
-static int32_t bus485_release(const struct device *dev)
+int32_t bus485_release(const struct device *dev)
 {
     struct bus485_data *data = dev->data;
     k_sem_give(&data->bus_sem);
     return 0;
 }
 
-static int32_t bus485_send(const struct device *dev,
+int32_t bus485_send(const struct device *dev,
                            const uint8_t *buffer, uint32_t count)
 {
     struct bus485_data *data = dev->data;
@@ -95,7 +95,7 @@ static int32_t bus485_send(const struct device *dev,
     return count;
 }
 
-static int32_t bus485_recv(const struct device *dev,
+int32_t bus485_recv(const struct device *dev,
                            uint8_t *buffer, uint32_t buffer_size,
                            uint32_t timeout_ms)
 {
@@ -118,7 +118,7 @@ static int32_t bus485_recv(const struct device *dev,
     return data->rx_received;
 }
 
-static int32_t bus485_flush(const struct device *dev)
+int32_t bus485_flush(const struct device *dev)
 {
     struct bus485_data *data = dev->data;
     uint8_t dummy;
@@ -131,7 +131,7 @@ static int32_t bus485_flush(const struct device *dev)
     return 0;
 }
 
-static int32_t bus485_set_baudrate(const struct device *dev, uint32_t baudrate)
+int32_t bus485_set_baudrate(const struct device *dev, uint32_t baudrate)
 {
     struct bus485_data *data = dev->data;
     
@@ -206,7 +206,7 @@ static int bus485_init(const struct device *dev)
 /* Devicetree макросы */
 #define DT_DRV_COMPAT custom_bus485
 
-static const struct bus485_driver_api bus485_api = {
+const struct bus485_driver_api bus485_api = {
     .lock = bus485_lock,
     .release = bus485_release,
     .send = bus485_send,
@@ -216,9 +216,9 @@ static const struct bus485_driver_api bus485_api = {
 };
 
 #define BUS485_DEFINE(n)                                    \
-    static struct bus485_data bus485_data_##n;              \
+    struct bus485_data bus485_data_##n;              \
                                                             \
-    static const struct bus485_config bus485_config_##n = { \
+    const struct bus485_config bus485_config_##n = { \
         .uart = DEVICE_DT_GET(DT_INST_PHANDLE(n, uart)),    \
         .de_re = GPIO_DT_SPEC_INST_GET(n, de_re_gpios),     \
         .current_baudrate = DT_INST_PROP(n, current_speed), \
