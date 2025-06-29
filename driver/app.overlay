@@ -1,5 +1,5 @@
 / {
-    bus485 {
+    bus485: serial@40005000 {
         compatible = "custom,bus485";
         label = "bus485";  // Обязательно!
         uart = <&uart0>;

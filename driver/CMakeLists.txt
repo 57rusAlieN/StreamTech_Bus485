@@ -10,4 +10,4 @@ target_sources(app PRIVATE
     src/bus485.c
 )
 
-set(DTS_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/dts)
+list(APPEND DTS_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/dts)
