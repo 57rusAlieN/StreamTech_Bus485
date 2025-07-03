@@ -49,9 +49,7 @@
         "config": [],
         "extraConfig": [],
         "overlay": [],
-        "extraOverlay": [
-          "driver\\app.overlay"
-        ]
+        "extraOverlay": []
       }
     }
   }

@@ -5,20 +5,26 @@ description: |
 
 compatible: "custom,bus485"
 
-include: 
-  - "st,stm32-uart.yaml"
-  - "st,stm32-gpio.yaml"
+include: ["gpio-controller.yaml", "uart-controller.yaml"]
 
 properties:
   uart:
     type: phandle
+    required: true
     description: |
       phandle to UART device used for communication
 
   de-re-gpios:
     type: phandle-array
+    required: true
     description: |
       GPIO specifier for DE/RE control pin (active high/low)
+
+  gpios:
+    type: phandle-array
+    required: true
+    description: |
+      GPIO specifier for GPIO control pin (active high/low)
 
   pre-delay-us:
     type: int
@@ -38,21 +44,13 @@ properties:
     description: |
       Initial baud rate for the UART
 
-required:
-  - name: uart
-  - name: de-re-gpios
-
-# Отключаем проверку дублирования для current-speed
-ignore-properties:
-  - current-speed
-
-examples:
-  - |
-    bus485 {
-        compatible = "custom,bus485";
-        uart = <&uart0>;
-        de-re-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
-        pre-delay-us = <100>;
-        post-delay-us = <100>;
-        current-speed = <115200>;
-    };
+# examples:
+#   - |
+#     bus485 {
+#         compatible = "custom,bus485";
+#         uart = <&uart0>;
+#         de-re-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+#         pre-delay-us = <100>;
+#         post-delay-us = <100>;
+#         current-speed = <115200>;
+#     };

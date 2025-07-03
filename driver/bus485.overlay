@@ -1,0 +1,23 @@
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+   bus485: bus485 {
+        compatible = "custom,bus485";
+        label = "bus485";  // Обязательно!
+        
+        #gpio-cells = <2>;  // Если UART поддерживает GPIO
+        gpio-controller;  // Если UART поддерживает GPIO
+
+        uart = <&uart0>;
+        gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
+        de-re-gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>; // 0 - GPIO_ACTIVE_HIGH
+        pre-delay-us = <100>;
+        post-delay-us = <100>;
+        current-speed = <115200>;
+        data-bits = <8>;
+        parity = "none";
+        stop-bits = "1";
+
+        status = "okay";
+    };
+};

@@ -1,1 +1,1 @@
-custom   Custom Device Vendor
+custom	Custom Device Vendor

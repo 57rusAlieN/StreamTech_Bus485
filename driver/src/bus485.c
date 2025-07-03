@@ -5,6 +5,8 @@
 
 LOG_MODULE_REGISTER(bus485, CONFIG_BUS485_LOG_LEVEL);
 
+#define BUS485_DRV_COMPAT custom_bus485
+
 /* Конфигурация драйвера */
 struct bus485_config 
 {
@@ -215,11 +217,12 @@ const struct bus485_driver_api bus485_api = {
     .set_baudrate = bus485_set_baudrate,
 };
 
+/*        .uart = DEVICE_DT_GET(DT_INST_PHANDLE(n, uart)),    \*/
+
 #define BUS485_DEFINE(n)                                    \
     struct bus485_data bus485_data_##n;              \
                                                             \
     const struct bus485_config bus485_config_##n = { \
-        .uart = DEVICE_DT_GET(DT_INST_PHANDLE(n, uart)),    \
         .de_re = GPIO_DT_SPEC_INST_GET(n, de_re_gpios),     \
         .current_baudrate = DT_INST_PROP(n, current_speed), \
         .pre_delay_us = DT_INST_PROP(n, pre_delay_us),      \
@@ -233,13 +236,13 @@ const struct bus485_driver_api bus485_api = {
         } \
     };                                                      \
                                                             \
-    DEVICE_DT_INST_DEFINE(n,                                \
-                          bus485_init,                      \
-                          NULL,                             \
-                          &bus485_data_##n,                 \
-                          &bus485_config_##n,             \
-                          POST_KERNEL,                      \
-                          CONFIG_BUS485_INIT_PRIORITY,      \
-                          &bus485_api); // <--- Регистрация API
+    DEVICE_DT_DEFINE(DT_NODELABEL(bus485),             \
+                        bus485_init,                      \
+                        NULL,                             \
+                        &bus485_data_##n,                 \
+                        &bus485_config_##n,               \
+                        POST_KERNEL,                      \
+                        CONFIG_BUS485_INIT_PRIORITY,      \
+                        &bus485_api); // <--- Регистрация API
 
 DT_INST_FOREACH_STATUS_OKAY(BUS485_DEFINE)
