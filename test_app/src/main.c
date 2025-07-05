@@ -2,7 +2,7 @@
 #include <zephyr/device.h>
 #include <zephyr/logging/log.h>
 
-#include "../../driver/inc/bus485.h"
+#include <bus485.h>
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_DBG);
 

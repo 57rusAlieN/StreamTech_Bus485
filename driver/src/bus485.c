@@ -5,8 +5,6 @@
 
 LOG_MODULE_REGISTER(bus485, CONFIG_BUS485_LOG_LEVEL);
 
-#define BUS485_DRV_COMPAT custom_bus485
-
 /* Конфигурация драйвера */
 struct bus485_config 
 {
@@ -207,6 +205,8 @@ static int bus485_init(const struct device *dev)
 
 /* Devicetree макросы */
 #define DT_DRV_COMPAT custom_bus485
+#define BUS485_DRV_COMPAT custom_bus485
+
 
 const struct bus485_driver_api bus485_api = {
     .lock = bus485_lock,
@@ -217,8 +217,9 @@ const struct bus485_driver_api bus485_api = {
     .set_baudrate = bus485_set_baudrate,
 };
 
-/*        .uart = DEVICE_DT_GET(DT_INST_PHANDLE(n, uart)),    \*/
-
+#ifdef BUS485_USE_MULTIPLE_INSTANCE
+/// Multiple instances
+#define BUS485_NODE DT_NODELABEL(bus485)
 #define BUS485_DEFINE(n)                                    \
     struct bus485_data bus485_data_##n;              \
                                                             \
@@ -236,7 +237,7 @@ const struct bus485_driver_api bus485_api = {
         } \
     };                                                      \
                                                             \
-    DEVICE_DT_DEFINE(DT_NODELABEL(bus485),             \
+    DEVICE_DT_INST_DEFINE(n,             \
                         bus485_init,                      \
                         NULL,                             \
                         &bus485_data_##n,                 \
@@ -246,3 +247,32 @@ const struct bus485_driver_api bus485_api = {
                         &bus485_api); // <--- Регистрация API
 
 DT_INST_FOREACH_STATUS_OKAY(BUS485_DEFINE)
+
+#else
+/// Single instance
+#define BUS485_NODE DT_PATH(bus485)
+struct bus485_data bus485_data;
+const struct bus485_config bus485_config = { 
+    //.de_re = GPIO_DT_SPEC_GET(DT_PATH(bus485), de_re_gpios),     
+    .current_baudrate = DT_PROP(BUS485_NODE, current_speed), 
+    .pre_delay_us = DT_PROP(BUS485_NODE, pre_delay_us),      
+    .post_delay_us = DT_PROP(BUS485_NODE, post_delay_us),    
+    .uart_cfg = { 
+        .baudrate = DT_PROP(BUS485_NODE, current_speed), 
+        .parity = UART_CFG_PARITY_NONE, 
+        .stop_bits = UART_CFG_STOP_BITS_1, 
+        .data_bits = UART_CFG_DATA_BITS_8, 
+        .flow_ctrl = UART_CFG_FLOW_CTRL_NONE 
+    } 
+};                                                      
+
+DEVICE_DT_DEFINE(BUS485_NODE,             \
+                    bus485_init,                      \
+                    NULL,                             \
+                    &bus485_data,                 \
+                    &bus485_config,               \
+                    POST_KERNEL,                      \
+                    CONFIG_BUS485_INIT_PRIORITY,      \
+                    &bus485_api); // <--- Регистрация API
+#endif // BUS485_USE_MULTIPLE_INSTANCE
+

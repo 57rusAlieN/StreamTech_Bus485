@@ -23,4 +23,4 @@ config BUS485_LOG_LEVEL
       BUS485 driver log level (0-4)
 
 endif # BUS485
-source "Kconfig.zephyr"
+#source "Kconfig.zephyr"

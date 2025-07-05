@@ -1,0 +1,23 @@
+Bus485
+|--- driver
+|     |--- dts
+|     |     |--- bindings
+|     |           |--- bus485
+|     |                 |--- custom,bus485.yaml
+|     |                 |--- vendor-prefixes.txt
+|     |--- inc
+|           |--- bus485.h
+|     |--- src
+|           |--- bus485.c
+|     |--- zephyr
+|           |--- module.yaml
+|     |--- bus485.overlay
+|     |--- bus485.yaml
+|     |--- CMakeLists.txt
+|     |--- Kconfig
+|     |--- prj.conf
+|--- test_app
+      |--- src
+      |     |--- main.c
+      |--- CMakeLists.txt
+      |--- prj.conf
