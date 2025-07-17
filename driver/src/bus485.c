@@ -28,7 +28,6 @@ struct bus485_data
     struct k_sem bus_sem;
 
     /* Очередь приема */
-    struct k_fifo rx_fifo;
     uint8_t rx_buf[CONFIG_BUS485_RX_QUEUE_SIZE];
     uint16_t rx_head;
     uint16_t rx_tail;
@@ -213,7 +212,6 @@ static int bus485_init(const struct device *dev)
     k_sem_init(&data->bus_sem, 1, 1);
 
     /* Инициализация очереди приема */
-    k_fifo_init(&data->rx_fifo);
     k_mutex_init(&data->rx_mutex);
     data->rx_head = 0;
     data->rx_tail = 0;
