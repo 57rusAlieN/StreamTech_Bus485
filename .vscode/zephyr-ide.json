@@ -42,7 +42,14 @@
             "overlay": [],
             "extraOverlay": []
           },
-          "runnerConfigs": {}
+          "runnerConfigs": {
+            "default": {
+              "runner": "default",
+              "name": "default",
+              "args": ""
+            }
+          },
+          "launchTarget": "Zephyr IDE: Debug"
         }
       },
       "confFiles": {

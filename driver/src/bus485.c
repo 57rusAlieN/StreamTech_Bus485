@@ -25,13 +25,14 @@ struct bus485_data
 
     /* Синхронизация */
     struct k_sem tx_sem;
-    struct k_sem rx_sem;
     struct k_sem bus_sem;
 
-    /* Буферы */
-    uint8_t *rx_buf;
-    uint32_t rx_buf_size;
-    volatile uint32_t rx_received;
+    /* Очередь приема */
+    struct k_fifo rx_fifo;
+    uint8_t rx_buf[CONFIG_BUS485_RX_QUEUE_SIZE];
+    uint16_t rx_head;
+    uint16_t rx_tail;
+    struct k_mutex rx_mutex;
 };
 
 /* API реализации */
@@ -103,19 +104,28 @@ int32_t bus485_recv(const struct device *dev,
     const struct bus485_config *cfg = dev->config;
 
     /* Настраиваем буфер приема */
-    data->rx_buf = buffer;
-    data->rx_buf_size = buffer_size;
-    data->rx_received = 0;
+    // data->rx_buf = buffer;
+    // data->rx_buf_size = buffer_size;
+    uint32_t rx_received = 0;
 
     /* Убедимся, что передатчик выключен */
     gpio_pin_set_dt(&cfg->de_re, 0);
 
-    /* Ждем данные с таймаутом */
-    if (k_sem_take(&data->rx_sem, K_MSEC(timeout_ms))) {
-        return -ETIMEDOUT;
+    /* Читаем данные из очереди с таймаутом */
+    while (rx_received < buffer_size) {
+        if (k_mutex_lock(&data->rx_mutex, K_MSEC(timeout_ms))) return −EAGAIN;
+        
+        if (data->rx_tail != data->rx_head) {
+            buffer[rx_received++] = data->rx_buf[data->rx_tail];
+            data->rx_tail = (data->rx_tail + 1) % CONFIG_BUS485_RX_QUEUE_SIZE;
+            k_mutex_unlock(&data->rx_mutex);
+        } else {
+            /// Очередь пуста
+            k_mutex_unlock(&data->rx_mutex);
+            break;
+        }
     }
-
-    return data->rx_received;
+    return rx_received;
 }
 
 int32_t bus485_flush(const struct device *dev)
@@ -127,6 +137,10 @@ int32_t bus485_flush(const struct device *dev)
     {
         /* Читаем и отбрасываем все данные */
     }
+
+    /* Сбрасываем очередь */
+    data->rx_head = 0;
+    data->rx_tail = 0;
 
     return 0;
 }
@@ -157,15 +171,19 @@ static void uart_isr(const struct device *uart_dev, void *user_data)
 
     /* Обработка приема */
     while (uart_irq_update(uart_dev) && uart_irq_rx_ready(uart_dev)) {
-        if (uart_fifo_read(uart_dev, &byte, 1) == 1) {
-            if (data->rx_received < data->rx_buf_size) {
-                data->rx_buf[data->rx_received++] = byte;
+        if (uart_fifo_read(uart_dev, &byte, 1) == 1){
+            /* Блокируем очередь */
+            k_mutex_lock(&data->rx_mutex, K_FOREVER);
+            uint16_t next_head = (data->rx_head + 1) % CONFIG_BUS485_RX_QUEUE_SIZE;
+            
+            if (next_head != data->rx_tail) {
+                data->rx_buf[data->rx_head] = byte;
+                data->rx_head = next_head;
             }
+            /* Сигнализируем о получении данных */
+            k_mutex_unlock(&data->rx_mutex);
         }
     }
-
-    /* Сигнализируем о получении данных */
-    k_sem_give(&data->rx_sem);
 }
 
 /* Инициализация драйвера */
@@ -192,8 +210,13 @@ static int bus485_init(const struct device *dev)
 
     /* Инициализация семафоров */
     k_sem_init(&data->tx_sem, 1, 1);
-    k_sem_init(&data->rx_sem, 0, 1);
     k_sem_init(&data->bus_sem, 1, 1);
+
+    /* Инициализация очереди приема */
+    k_fifo_init(&data->rx_fifo);
+    k_mutex_init(&data->rx_mutex);
+    data->rx_head = 0;
+    data->rx_tail = 0;
 
     /* Регистрация обработчика прерываний */
     uart_irq_callback_user_data_set(data->uart, uart_isr, (void *)dev);

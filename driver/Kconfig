@@ -21,6 +21,11 @@ config BUS485_LOG_LEVEL
     range 0 4
     help
       BUS485 driver log level (0-4)
-
+config BUS485_RX_QUEUE_SIZE
+    int "RX queue size"
+    default 1024
+    range 32 16384
+    help
+      Size of the receive queue in bytes (32-16384)
 endif # BUS485
 #source "Kconfig.zephyr"
